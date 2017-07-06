@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Udacity Neighborhood Map Project</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+  </head>
+  <body>
+  	<div id="map"></div>
+     <div id="listDiv">
+      <ul id="listView" data-bind="foreach: neighborhoodPlaces">
+        <li data-bind="text: name, click: $parent.selectedMarker"></li>
+      </ul>
+    </div>
+
+    <script src="js/knockout-3.4.0.js"></script>
+
+    <script src="js/neighborhood.js"></script>
+
+    <!--Load Google map, call error handling if problem-->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5OAqmH9eC2BAIJ02cRTLkODaW0gbEgFc&callback=initMap" onerror="mapApiError()"></script>
+
+    <!--Google map error handler-->
+    <script>
+      function mapApiError()
+      {
+        alert("Sorry, Google map failed to load.  Error detail can be found in Javascript console.");
+      }
+    </script>
+  </body>
+</html>
