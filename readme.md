@@ -14,7 +14,6 @@ The application shows a Google Map of the University of Minnesota area, with sev
 
 The application can be run directly from the [GitHub Repository](https://rawgit.com/howardjmn/NeighborhoodMap/master/index.html)
 
-
 You can also run it locally by downloading the repository to a folder on your computer, then opening the index.html file in the web browser of your choice.
 
 ## Resources Used For This Project
@@ -23,3 +22,7 @@ You can also run it locally by downloading the repository to a folder on your co
 
 - Google Maps API
 -- This implementation is based on the examples provided in the "Understanding API services" module in this course.
+
+Update History
+ - Iteration 1: Just displays a map and list of locations
+ - Iteration 2: Added markers and infowindows, copying code from (Project_Code_4_WindowShoppingPart2.html) with modifications to make it compatible with knockout.
