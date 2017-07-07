@@ -61,45 +61,28 @@ function initMap()
       zoom: 12,
       center: {lat: 44.978409, lng: -93.234671}
     });
-    this.markers = [];
     this.infoWindow = new google.maps.InfoWindow();
 
     // create list of neighborhood locations
-    this.neighborhoodPlaces = ko.observableArray([]);
+    this.markers = ko.observableArray([]);
 
-    locations.forEach(function(neighborhoodItem)
+    // The following loop uses the location array to add markers to the location array
+    locations.forEach(function(location)
     {
-        self.neighborhoodPlaces.push(new NeighborhoodPlace(neighborhoodItem));
-    });
-
-    // Link marker to selected list item
-    self.selectedMarker = function(marker)
-    {
-      google.maps.event.trigger(this.marker, 'click');
-    };
-
-    // The following loop uses the location array to create an array of markers on initialize.
-    for (var i = 0; i < locations.length; i++)
-    {
-      // Get the position from the location array.
-      var position = locations[i].location;
-      var name = locations[i].name;
-      var address = locations[i].address;
-
-      // Create a marker per location, and put into markers array.
-      var marker = new google.maps.Marker
+      // Create a marker for each location
+      this.marker = new google.maps.Marker
       ({
-          position: position,
-          name: name,
-          address: address,
-          animation: google.maps.Animation.DROP,
-          id: i
+          position: location.location,
+          name: location.name,
+          address: location.address,
+          website: location.website,
+          animation: google.maps.Animation.DROP
       });
 
-      // Create an onclick event to open an infoWindow   at each marker.
-      marker.addListener('click', function()
+      // Create an onclick event to open an infoWindow at each marker.
+      this.marker.addListener('click', function()
       {
-          // Check to make sure the infoWindow   is not already opened on this marker.
+          // Check to make sure the infoWindow is not already opened on this marker.
           if (self.infoWindow.marker != this)
           {
               self.infoWindow.marker = this;
@@ -110,19 +93,36 @@ function initMap()
               // Make sure the marker property is cleared if the infoWindow   is closed.
               self.infoWindow.addListener('closeclick', function()
               {
-                self.infoWindow.marker = null;
+                  self.infoWindow.marker = null;
               });
           }
        });
 
-      //show marker
-      marker.setMap(self.map);
+      // show marker
+      this.marker.setMap(self.map);
 
-      // Push the marker to our array of markers.
-      self.markers.push(marker);
+      // Add the marker to the location
+      location.marker = this.marker;
+
+      // add the marker to the observable array
+      self.markers.push(this.marker);
+    });
+
+    // Activate marker when location selected from list
+    self.activateMarker = function(marker)
+    {
+        console.log("activateMarker: " + marker.name);
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        google.maps.event.trigger(marker, 'click');
+
+        // stop bouncing after 3 seconds
+        setTimeout(function()
+        {
+            marker.setAnimation(null);
+        }, 3000);
     };
   };
 
-  //Instantiate the ViewModel
+  // Instantiate the ViewModel
   ko.applyBindings(new ViewModel());
 }
