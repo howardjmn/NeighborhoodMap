@@ -13,8 +13,12 @@
   <body>
   	<div id="map"></div>
      <div id="listDiv">
-      <ul id="listView" data-bind="foreach: neighborhoodPlaces">
-        <li data-bind="text: name, click: $parent.selectedMarker"></li>
+      <ul id="listView" data-bind="foreach: markers">
+        <li>
+          <a href="#" id="listItem">
+            <p data-bind="text: name, click: $parent.activateMarker"></p>
+          </a>
+        </li>
       </ul>
     </div>
 
