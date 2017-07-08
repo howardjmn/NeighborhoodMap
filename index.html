@@ -13,7 +13,8 @@
   <body>
   	<div id="map"></div>
      <div id="listDiv">
-      <ul id="listView" data-bind="foreach: markers">
+      <p>Search: <input data-bind="value: filter, valueUpdate: 'keyup'" /></p>
+      <ul id="listView" data-bind="foreach: filteredMarkers">
         <li>
           <a href="#" id="listItem">
             <p data-bind="text: name, click: $parent.activateMarker"></p>

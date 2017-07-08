@@ -30,4 +30,4 @@ Update History
 
  - Iteration 3: Clicking item in the list now opens the corresponding infoWindow.  This wasn't working in the previous iteration because I had created separate observable arrays for the locations and the markers.  I only needed the one for the markers.  Debugged with help from http://knockoutjs.com/documentation/foreach-binding.html.  Also added marker animation (https://developers.google.com/maps/documentation/javascript/examples/marker-animations-iteration).
 
- http://www.brewerydb.com/developers
+- Iteration 4: Added search function, using code from http://www.knockmeout.net/2011/04/utility-functions-in-knockoutjs.html.  Also copied 'stringStartsWith' function from https://stackoverflow.com/questions/30168480/ko-utils-stringstartswith-not-working.
