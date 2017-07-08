@@ -12,7 +12,7 @@ var locations =
     website: 'http://www.urbangrowlerbrewing.com/',
     marker: ''
   },
-  { name: 'BlackStack Brewing',
+  { name: 'slackStack Brewing',
     address: '755 Prior Ave N, St Paul, MN 55104',
     location: {lat: 44.964203, lng: -93.182941},
     website: 'http://www.blackstackbrewing.com/',
@@ -96,7 +96,7 @@ function initMap()
                   self.infoWindow.marker = null;
               });
           }
-       });
+      });
 
       // show marker
       this.marker.setMap(self.map);
@@ -108,10 +108,29 @@ function initMap()
       self.markers.push(this.marker);
     });
 
+    // This is the search value
+    self.filter = ko.observable('');
+
+    // filter the items using the filter text
+    self.filteredMarkers = ko.computed(function()
+    {
+        var filter = self.filter().toLowerCase();
+        if (!filter)
+        {
+            return self.markers();
+        }
+        else
+        {
+            return ko.utils.arrayFilter(self.markers(), function(marker)
+            {
+                return stringStartsWith(marker.name.toLowerCase(), filter);
+            });
+        }
+    }, self);
+
     // Activate marker when location selected from list
     self.activateMarker = function(marker)
     {
-        console.log("activateMarker: " + marker.name);
         marker.setAnimation(google.maps.Animation.BOUNCE);
         google.maps.event.trigger(marker, 'click');
 
@@ -120,6 +139,15 @@ function initMap()
         {
             marker.setAnimation(null);
         }, 3000);
+    };
+
+    // determine if passed 'string' begins with the passed 'startsWith' value
+    var stringStartsWith = function (string, startsWith)
+    {
+        string = string || "";
+        if (startsWith.length > string.length)
+            return false;
+        return string.substring(0, startsWith.length) === startsWith;
     };
   };
 
