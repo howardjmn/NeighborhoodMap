@@ -12,20 +12,23 @@
   </head>
   <body>
   	<div id="map"></div>
-     <div id="listDiv">
-      <p>Search: <input data-bind="value: filter, valueUpdate: 'keyup'" /></p>
-      <ul id="listView" data-bind="foreach: filteredMarkers">
+    <div id="searchDiv">
+      <div id="filter">
+        <!--Bind list to query search-->
+        <input class="search-box" placeholder="Search…" type="search"  data-bind="value: query, valueUpdate: 'keyup'" autocomplete="off">
+      </div>
+      <!--Show only results matching query search-->
+      <ul id="list-view" data-bind="foreach:filteredPlaces">
         <li>
-          <a href="#" id="listItem">
-            <p data-bind="text: name, click: $parent.activateMarker"></p>
-          </a>
+          <!--Bind list items to placeItem names-->
+          <a href="#" id="listItems"><strong data-bind="text:name, click: $root.markerConnect"></strong></a>
         </li>
       </ul>
     </div>
 
     <script src="js/knockout-3.4.0.js"></script>
 
-    <script src="js/neighborhood.js"></script>
+    <script src="js/app.js"></script>
 
     <!--Load Google map, call error handling if problem-->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5OAqmH9eC2BAIJ02cRTLkODaW0gbEgFc&callback=initMap" onerror="mapApiError()"></script>
@@ -34,7 +37,7 @@
     <script>
       function mapApiError()
       {
-        alert("Sorry, Google map failed to load.  Error detail can be found in Javascript console.");
+        alert("Sorry, Google map failed to load.  Please try again.");
       }
     </script>
   </body>
