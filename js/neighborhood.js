@@ -90,7 +90,7 @@ function initMap()
           {
               this.search = "/breweries?";
               this.terms = "ids=" +  "rdrfPw";
-              this.fullUrl = baseUrl + this.search + this.terms + key;
+              this.fullUrl = breweryDbUrl + this.search + this.terms + breweryDbKey;
 
               console.log("URL: " + this.fullUrl);
 
