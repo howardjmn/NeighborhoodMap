@@ -34,7 +34,6 @@ Update History
 
 - Iteration 5: Populate infoWindow with values retrieved from BreweryDb API: http://www.brewerydb.com/developers.  At this point the brewery ID to get the brewery description is hard-coded and thus not correct for the infoWindow being displayed.  It will be correct in the next iteration after the list of locations (with brewery IDs) is built using the API.  Problems encountered in this iteration:
 
--- Details for XMLHttpRequest used to call API: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
-
--- Installed CORS extension for Chrome to solve this problem: https://stackoverflow.com/questions/20035101/no-access-control-allow-origin-header-is-present-on-the-requested-resource
--- Adddd setPosition to infoWindow to solve this problem: https://stackoverflow.com/questions/42331086/adding-google-maps-infowindow-from-data-features-generates-error-b-get-is-not
+* Details for XMLHttpRequest used to call API: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+* Installed CORS extension for Chrome to solve this problem: https://stackoverflow.com/questions/20035101/no-access-control-allow-origin-header-is-present-on-the-requested-resource
+* Added setPosition to infoWindow to solve this problem: https://stackoverflow.com/questions/42331086/adding-google-maps-infowindow-from-data-features-generates-error-b-get-is-not
