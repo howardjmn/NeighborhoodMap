@@ -1,3 +1,6 @@
+var breweryDbUrl = "http://api.brewerydb.com/v2";
+var breweryDbKey = "&key=0d1c7bd898b81732618aa3295f808828";
+
 var locations =
 [
   { name: 'Surly Brewing',
@@ -37,118 +40,161 @@ var locations =
     marker: ''
   }
 ];
-
+/**
 var NeighborhoodPlace = function(data)
 {
-  this.name = ko.observable(data.name);
-  this.address = ko.observable(data.address);
-  this.latitude = ko.observable(data.location.lat);
-  this.longitude = ko.observable(data.location.lng);
-  this.website = ko.observable(data.website);
-  this.marker = ko.observable(data.marker);
+    this.name = ko.observable(data.name);
+    this.address = ko.observable(data.address);
+    this.latitude = ko.observable(data.location.lat);
+    this.longitude = ko.observable(data.location.lng);
+    this.website = ko.observable(data.website);
+    this.marker = ko.observable(data.marker);
 };
-
+*/
 function initMap()
 {
-  var ViewModel = function()
-  {
-    //Self alias
-    var self = this;
-
-    //Center map on University of Minnesota east bank
-    this.map = new google.maps.Map(document.getElementById('map'),
+    var ViewModel = function()
     {
-      zoom: 12,
-      center: {lat: 44.978409, lng: -93.234671}
-    });
-    this.infoWindow = new google.maps.InfoWindow();
+      //Self alias
+      var self = this;
+      this.temp='xxx';
 
-    // create list of neighborhood locations
-    this.markers = ko.observableArray([]);
+      //Center map on University of Minnesota east bank
+      this.map = new google.maps.Map(document.getElementById('map'),
+      {
+        zoom: 12,
+        center: {lat: 44.978409, lng: -93.234671}
+      });
+      this.infoWindow = new google.maps.InfoWindow();
 
-    // The following loop uses the location array to add markers to the location array
-    locations.forEach(function(location)
-    {
-      // Create a marker for each location
-      this.marker = new google.maps.Marker
-      ({
-          position: location.location,
-          name: location.name,
-          address: location.address,
-          website: location.website,
-          animation: google.maps.Animation.DROP
+      // create list of neighborhood locations
+      this.markers = ko.observableArray([]);
+
+      // The following loop uses the location array to add markers to the location array
+      locations.forEach(function(location)
+      {
+          // Create a marker for each location
+          this.marker = new google.maps.Marker
+          ({
+              position: location.location,
+              name: location.name,
+              address: location.address,
+              website: location.website,
+              animation: google.maps.Animation.DROP
+          });
+
+          var currentMarker = this.marker;
+
+          // Create an onclick event to open an infoWindow at each marker.
+          google.maps.event.addListener(currentMarker, 'click', function()
+          {
+              this.search = "/breweries?";
+              this.terms = "ids=" +  "rdrfPw";
+              this.fullUrl = baseUrl + this.search + this.terms + key;
+
+              console.log("URL: " + this.fullUrl);
+
+              var requestTimeout = setTimeout(function()
+              {
+                  alert("Unable to retrieve brewery description within 10 seconds");
+              }, 10000);
+
+              var breweryRequest = new XMLHttpRequest();
+              breweryRequest.open("GET", this.fullUrl, true);
+
+              breweryRequest.addEventListener('load', function()
+              {
+                  var response = JSON.parse(breweryRequest.responseText);
+                  console.log(response);
+                  if (response.data.length > 0)
+                  {
+                      console.log(response.data[0].name);
+                      description = response.data[0].description;
+
+                      if (self.infoWindow.marker != this)
+                      {
+                          self.infoWindow.marker = this;
+                          self.infoWindow.setContent
+                            ('<div>' + currentMarker.name + '</div>' +
+                             '<div>' + currentMarker.address + '</div>' +
+                             '<div>' + currentMarker.website + '</div>' +
+                             '<div>' + description + '</div>');
+                          self.infoWindow.setPosition(currentMarker.position);
+                          self.infoWindow.open(self.map);
+                          // Make sure the marker property is cleared if the infoWindow is closed.
+                          self.infoWindow.addListener('closeclick', function()
+                          {
+                              self.infoWindow.marker = null;
+                          });
+                      }
+
+                      clearTimeout(requestTimeout);
+                   }
+                  else
+                  {
+                      description = "Brewery with ID " + breweryId + " not found";
+                  }
+               });
+
+               breweryRequest.send();
+          });
+
+          // show marker
+          this.marker.setMap(self.map);
+
+          // Add the marker to the location
+          location.marker = this.marker;
+
+          // add the marker to the observable array
+          self.markers.push(this.marker);
       });
 
-      // Create an onclick event to open an infoWindow at each marker.
-      this.marker.addListener('click', function()
+      // This is the search value
+      self.filter = ko.observable('');
+
+      // filter the items using the filter text
+      self.filteredMarkers = ko.computed(function()
       {
-          // Check to make sure the infoWindow is not already opened on this marker.
-          if (self.infoWindow.marker != this)
+          var filter = self.filter().toLowerCase();
+          if (!filter)
           {
-              self.infoWindow.marker = this;
-              self.infoWindow.setContent
-                ('<div>' + this.name + '</div>' +
-                 '<div>' + this.address + '</div>');
-              self.infoWindow.open(self.map, this);
-              // Make sure the marker property is cleared if the infoWindow   is closed.
-              self.infoWindow.addListener('closeclick', function()
+              return self.markers();
+          }
+          else
+          {
+              return ko.utils.arrayFilter(self.markers(), function(marker)
               {
-                  self.infoWindow.marker = null;
+                  return self.stringStartsWith(marker.name.toLowerCase(), filter);
               });
           }
-      });
+      }, self).extend({notify: 'always'});
 
-      // show marker
-      this.marker.setMap(self.map);
+      // Activate marker when location selected from list
+      self.activateMarker = function(marker)
+      {
+          marker.setAnimation(google.maps.Animation.BOUNCE);
+          google.maps.event.trigger(marker, 'click');
 
-      // Add the marker to the location
-      location.marker = this.marker;
+          // stop bouncing after 3 seconds
+          setTimeout(function()
+          {
+              marker.setAnimation(null);
+          }, 3000);
+      };
 
-      // add the marker to the observable array
-      self.markers.push(this.marker);
-    });
+      self.updateMarker = function(marker, name)
+      {
+          marker.name = name;
+      };
 
-    // This is the search value
-    self.filter = ko.observable('');
-
-    // filter the items using the filter text
-    self.filteredMarkers = ko.computed(function()
-    {
-        var filter = self.filter().toLowerCase();
-        if (!filter)
-        {
-            return self.markers();
-        }
-        else
-        {
-            return ko.utils.arrayFilter(self.markers(), function(marker)
-            {
-                return stringStartsWith(marker.name.toLowerCase(), filter);
-            });
-        }
-    }, self);
-
-    // Activate marker when location selected from list
-    self.activateMarker = function(marker)
-    {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-        google.maps.event.trigger(marker, 'click');
-
-        // stop bouncing after 3 seconds
-        setTimeout(function()
-        {
-            marker.setAnimation(null);
-        }, 3000);
-    };
-
-    // determine if passed 'string' begins with the passed 'startsWith' value
-    var stringStartsWith = function (string, startsWith)
-    {
-        string = string || "";
-        if (startsWith.length > string.length)
-            return false;
-        return string.substring(0, startsWith.length) === startsWith;
-    };
+      // determine if passed 'string' begins with the passed 'startsWith' value
+      this.stringStartsWith = function(string, startsWith)
+      {
+          string = string || "";
+          if (startsWith.length > string.length)
+              return false;
+          return string.substring(0, startsWith.length) === startsWith;
+      };
   };
 
   // Instantiate the ViewModel
