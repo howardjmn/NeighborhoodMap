@@ -6,6 +6,7 @@ var terms;
 var fullUrl;
 var requestTimeout;
 var breweryRequest;
+var apiAttribution = "(Source: www.brewerydb.com)";
 
 var locations =
 [
@@ -98,6 +99,8 @@ function initMap()
               }, 10000);
 
               breweryRequest = new XMLHttpRequest();
+
+              // 3rd param 'true' makes it async
               breweryRequest.open("GET", fullUrl, true);
 
               breweryRequest.addEventListener('load', function()
@@ -107,16 +110,16 @@ function initMap()
                   if (response.data.length > 0)
                   {
                       console.log(response.data[0].name);
-                      description = response.data[0].description;
+                      description = response.data[0].description + " " + apiAttribution;
 
                       if (self.infoWindow.marker != this)
                       {
                           self.infoWindow.marker = this;
                           self.infoWindow.setContent
-                            ('<div>' + currentMarker.name + '</div>' +
-                             '<div>' + currentMarker.address + '</div>' +
-                             '<div>' + currentMarker.website + '</div>' +
-                             '<div>' + description + '</div>');
+                            ('<p>' + currentMarker.name + '</p>' +
+                             '<p>' + currentMarker.address + '</p>' +
+                             '<p>' + currentMarker.website + '</p>' +
+                             '<p>' + description + '</p>');
                           self.infoWindow.setPosition(currentMarker.position);
                           self.infoWindow.open(self.map);
                           // Make sure the marker property is cleared if the infoWindow is closed.
