@@ -1,63 +1,59 @@
-var breweryDbUrl = "http://api.brewerydb.com/v2";
+// These varibles are used to communicate with the BreweryDB API
+var breweryDbUrl = "https://api.brewerydb.com/v2";
 var breweryDbKey = "&key=0d1c7bd898b81732618aa3295f808828";
+var search;
+var terms;
+var fullUrl;
+var requestTimeout;
+var breweryRequest;
 
 var locations =
 [
   { name: 'Surly Brewing',
     address: '520 Malcolm Ave SE, Minneapolis, MN 55414',
     location: {lat: 44.973279, lng: -93.209802},
-    website: 'http://www.lakemonsterbrewing.com/',
-    marker: ''
+    website: 'http://www.surlybrewing.com/',
+    id: 'cPRfoj'
   },
-  { name: 'Urban Growler Brewing',
-    address: '2325 Endicott St, St Paul, MN 55114',
-    location: {lat: 44.970632, lng: -93.193282},
-    website: 'http://www.urbangrowlerbrewing.com/',
-    marker: ''
+  { name: 'Utepils Brewing',
+    address: '225 Thomas Av N, Minneapolis, MN 55405',
+    location: {lat: 44.978673, lng: -93.312176},
+    website: 'www.utepilsbrewing.com/',
+    id: 'W00af5'
   },
-  { name: 'slackStack Brewing',
-    address: '755 Prior Ave N, St Paul, MN 55104',
-    location: {lat: 44.964203, lng: -93.182941},
-    website: 'http://www.blackstackbrewing.com/',
-    marker: ''
+  { name: 'Boom Island Brewing',
+    address: '2022 N Washington Av, Minneapolis, MN 55411',
+    location: {lat: 45.000042, lng: -93.281488},
+    website: 'http://www.boomislandbrewing.com/',
+    id: 'rdrfPw'
   },
   { name: 'Fulton Brewery',
     address: '414 N 6th Ave, Minneapolis, MN 55401',
     location: {lat: 44.985134, lng: -93.279214},
     website: 'http://www.fultonbeer.com/',
-    marker: ''
+    id: '5GoGSi'
   },
   { name: 'Eastlake Craft Brewery',
     address: '920 E Lake St, Minneapolis, MN 55407',
     location: {lat: 44.948903, lng: -93.260741},
     website: 'http://www.eastlakemgm.com/',
-    marker: ''
+    id: 'IHouhj'
   },
   { name: 'Wild Mind Artisan Ales',
     address: '6031 Pillsbury Ave S, Minneapolis, MN 55419',
     location: {lat: 44.893291, lng: -93.281513},
     website: 'http://www.wildmindales.com/',
-    marker: ''
+    id: 'KGfYg2'
   }
 ];
-/**
-var NeighborhoodPlace = function(data)
-{
-    this.name = ko.observable(data.name);
-    this.address = ko.observable(data.address);
-    this.latitude = ko.observable(data.location.lat);
-    this.longitude = ko.observable(data.location.lng);
-    this.website = ko.observable(data.website);
-    this.marker = ko.observable(data.marker);
-};
-*/
+
+
 function initMap()
 {
     var ViewModel = function()
     {
       //Self alias
       var self = this;
-      this.temp='xxx';
 
       //Center map on University of Minnesota east bank
       this.map = new google.maps.Map(document.getElementById('map'),
@@ -65,6 +61,7 @@ function initMap()
         zoom: 12,
         center: {lat: 44.978409, lng: -93.234671}
       });
+
       this.infoWindow = new google.maps.InfoWindow();
 
       // create list of neighborhood locations
@@ -80,6 +77,7 @@ function initMap()
               name: location.name,
               address: location.address,
               website: location.website,
+              id: location.id,
               animation: google.maps.Animation.DROP
           });
 
@@ -88,19 +86,19 @@ function initMap()
           // Create an onclick event to open an infoWindow at each marker.
           google.maps.event.addListener(currentMarker, 'click', function()
           {
-              this.search = "/breweries?";
-              this.terms = "ids=" +  "rdrfPw";
-              this.fullUrl = breweryDbUrl + this.search + this.terms + breweryDbKey;
+              search = "/breweries?";
+              terms = "ids=" +  currentMarker.id;
+              fullUrl = breweryDbUrl + search + terms + breweryDbKey;
 
-              console.log("URL: " + this.fullUrl);
+              console.log("URL: " + fullUrl);
 
-              var requestTimeout = setTimeout(function()
+              requestTimeout = setTimeout(function()
               {
-                  alert("Unable to retrieve brewery description within 10 seconds");
+                  alert("Unable to retrieve brewery description for brewery with ID " + currentMarker.id);
               }, 10000);
 
-              var breweryRequest = new XMLHttpRequest();
-              breweryRequest.open("GET", this.fullUrl, true);
+              breweryRequest = new XMLHttpRequest();
+              breweryRequest.open("GET", fullUrl, true);
 
               breweryRequest.addEventListener('load', function()
               {
@@ -132,7 +130,7 @@ function initMap()
                    }
                   else
                   {
-                      description = "Brewery with ID " + breweryId + " not found";
+                      description = "Brewery with ID " + currentMarker.id + " not found";
                   }
                });
 
@@ -158,13 +156,27 @@ function initMap()
           var filter = self.filter().toLowerCase();
           if (!filter)
           {
+              // make all markers visible when filter is cleared
+              self.markers().forEach(function(marker)
+              {
+                  marker.setVisible(true);
+              });
+
               return self.markers();
           }
           else
           {
               return ko.utils.arrayFilter(self.markers(), function(marker)
               {
-                  return self.stringStartsWith(marker.name.toLowerCase(), filter);
+                  marker.setVisible(false);
+                  displayMarker = self.stringContains(marker.name.toLowerCase(), filter);
+
+                  if (displayMarker)
+                  {
+                      marker.setVisible(true);
+                  }
+
+                  return displayMarker;
               });
           }
       }, self).extend({notify: 'always'});
@@ -187,13 +199,13 @@ function initMap()
           marker.name = name;
       };
 
-      // determine if passed 'string' begins with the passed 'startsWith' value
-      this.stringStartsWith = function(string, startsWith)
+      // determine if passed 'string' contains the passed value
+      this.stringContains = function(string, contains)
       {
           string = string || "";
-          if (startsWith.length > string.length)
+          if (contains.length > string.length)
               return false;
-          return string.substring(0, startsWith.length) === startsWith;
+          return string.includes(contains);
       };
   };
 
