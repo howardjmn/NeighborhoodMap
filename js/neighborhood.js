@@ -62,7 +62,7 @@ var screenSizeLevel = function()
             return 0;
         }
     }
-}
+};
 
 /**
   Return the city selected by the user
@@ -72,7 +72,7 @@ var selectedCity = function()
     var city = document.getElementById("selectedCity").value;
 
     // clear destinations and return if no city was selected
-    if (city == null || city.trim().length == 0)
+    if (city === null || city.trim().length == 0)
     {
         return null;
     }
@@ -87,7 +87,7 @@ var centerMap = function(map, mapCenter)
 {
     var geocoder = new google.maps.Geocoder();
 
-    if (mapCenter == null)
+    if (mapCenter === null)
     {
         mapCenter = defaultMapCenter;
     }

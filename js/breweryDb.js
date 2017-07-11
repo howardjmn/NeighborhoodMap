@@ -31,7 +31,7 @@ var getBreweries = function()
     maxDestinations = maxDestinationList[screenSizeLevel()];
 
     // clear destinations and return if no city was selected
-    if (selectedCity() == null)
+    if (selectedCity() === null)
     {
         $('#seeBreweries').click();
         return;
@@ -64,23 +64,23 @@ var getBreweries = function()
                 this.brewery = response.data[i];
 
                 // store brewery only if it's open and has full mapping info
-                if (this.brewery.isClosed == 'N'
-                &&  this.brewery.isPrimary == 'Y'
-                &&  this.brewery.streetAddress != null
-                &&  this.brewery.latitude != null
-                &&  this.brewery.longitude != null)
+                if (this.brewery.isClosed == 'N' &&
+                    this.brewery.isPrimary == 'Y' &&
+                    this.brewery.streetAddress !== null &&
+                    this.brewery.latitude !== null &&
+                    this.brewery.longitude !== null)
                 {
                     console.log("ID: " + this.brewery.breweryId);
                     console.log("Name: " + this.brewery.brewery.name);
 
-                    if (this.brewery.website == null)
+                    if (this.brewery.website === null)
                     {
                         this.brewery.website = "no website";
                     }
 
                     destinations.push(new Brewery(this.brewery));
                 }
-            };
+            }
 
             console.log("destinations: " + destinations.length);
             console.log(destinations);
@@ -99,4 +99,4 @@ var getBreweries = function()
     });
 
     breweryRequest.send();
-}
+};
