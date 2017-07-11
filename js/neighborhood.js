@@ -1,52 +1,79 @@
-// These varibles are used to communicate with the BreweryDB API
-var breweryDbUrl = "https://api.brewerydb.com/v2";
-var breweryDbKey = "&key=0d1c7bd898b81732618aa3295f808828";
-var search;
-var terms;
-var fullUrl;
-var requestTimeout;
-var breweryRequest;
-var apiAttribution = "(Source: www.brewerydb.com)";
+var maxDestinations = 12;
 
-var locations =
-[
-  { name: 'Surly Brewing',
-    address: '520 Malcolm Ave SE, Minneapolis, MN 55414',
-    location: {lat: 44.973279, lng: -93.209802},
-    website: 'http://www.surlybrewing.com/',
-    id: 'cPRfoj'
-  },
-  { name: 'Utepils Brewing',
-    address: '225 Thomas Av N, Minneapolis, MN 55405',
-    location: {lat: 44.978673, lng: -93.312176},
-    website: 'www.utepilsbrewing.com/',
-    id: 'W00af5'
-  },
-  { name: 'Boom Island Brewing',
-    address: '2022 N Washington Av, Minneapolis, MN 55411',
-    location: {lat: 45.000042, lng: -93.281488},
-    website: 'http://www.boomislandbrewing.com/',
-    id: 'rdrfPw'
-  },
-  { name: 'Fulton Brewery',
-    address: '414 N 6th Ave, Minneapolis, MN 55401',
-    location: {lat: 44.985134, lng: -93.279214},
-    website: 'http://www.fultonbeer.com/',
-    id: '5GoGSi'
-  },
-  { name: 'Eastlake Craft Brewery',
-    address: '920 E Lake St, Minneapolis, MN 55407',
-    location: {lat: 44.948903, lng: -93.260741},
-    website: 'http://www.eastlakemgm.com/',
-    id: 'IHouhj'
-  },
-  { name: 'Wild Mind Artisan Ales',
-    address: '6031 Pillsbury Ave S, Minneapolis, MN 55419',
-    location: {lat: 44.893291, lng: -93.281513},
-    website: 'http://www.wildmindales.com/',
-    id: 'KGfYg2'
-  }
-];
+var destinations = [];
+
+var defaultMapCenter = "United States";
+
+var cityList = [' ',
+                'Atlanta',
+                'Baltimore',
+                'Boston',
+                'Chicago',
+                'Cincinnati',
+                'Cleveland',
+                'Dallas',
+                'Denver',
+                'Detroit',
+                'Houston',
+                'Kansas City',
+                'Los Angeles',
+                'Miami',
+                'Milwaukee',
+                'Minneapolis',
+                'New York',
+                'Oakland',
+                'Philadelphia',
+                'Phoenix',
+                'Pittsburgh',
+                'Saint Louis',
+                'San Diego',
+                'San Francisco',
+                'Seattle',
+                'Tampa',
+                'Toronto',
+                'Washington DC'
+               ];
+
+/**
+  Return the city selected by the user
+*/
+var selectedCity = function()
+{
+    var city = document.getElementById("selectedCity").value;
+
+    // clear destinations and return if no city was selected
+    if (city == null || city.trim().length == 0)
+    {
+        return null;
+    }
+
+    return city;
+};
+
+/**
+  Center the passed map on the passed location
+*/
+var centerMap = function(map, mapCenter)
+{
+    var geocoder = new google.maps.Geocoder();
+
+    if (mapCenter == null)
+    {
+        mapCenter = defaultMapCenter;
+    }
+
+    geocoder.geocode({'address': mapCenter}, function(results, status)
+    {
+        if (status == google.maps.GeocoderStatus.OK)
+        {
+            map.setCenter(results[0].geometry.location);
+        }
+        else
+        {
+            alert("Could not find location : " + location);
+        }
+    });
+};
 
 
 function initMap()
@@ -56,107 +83,139 @@ function initMap()
       //Self alias
       var self = this;
 
+      ko.options.deferUpdates = true;
+
       //Center map on University of Minnesota east bank
       this.map = new google.maps.Map(document.getElementById('map'),
       {
-        zoom: 12,
-        center: {lat: 44.978409, lng: -93.234671}
+        zoom: 5,
       });
+      centerMap(self.map, defaultMapCenter);
 
       this.infoWindow = new google.maps.InfoWindow();
 
-      // create list of neighborhood locations
+      // list of cities
+      this.cities = ko.observableArray(cityList);
+
+      // list of map markers
       this.markers = ko.observableArray([]);
 
-      // The following loop uses the location array to add markers to the location array
-      locations.forEach(function(location)
+      // This filters the display of destinations
+      self.filter = ko.observable('');
+
+      /**
+        The following loop through the destination array and adds markers
+      */
+      this.loadBreweries = function()
       {
-          // Create a marker for each location
-          this.marker = new google.maps.Marker
-          ({
-              position: location.location,
-              name: location.name,
-              address: location.address,
-              website: location.website,
-              id: location.id,
-              animation: google.maps.Animation.DROP
-          });
-
-          var currentMarker = this.marker;
-
-          // Create an onclick event to open an infoWindow at each marker.
-          google.maps.event.addListener(currentMarker, 'click', function()
+          // clear markers if array was already populated
+          while (self.markers().length > 0)
           {
-              search = "/breweries?";
-              terms = "ids=" +  currentMarker.id;
-              fullUrl = breweryDbUrl + search + terms + breweryDbKey;
+              self.markers.pop();
+          }
 
-              console.log("URL: " + fullUrl);
+          destinations.forEach(function(destination)
+          {
+              console.log("add brewery: " + destination.name);
+              // Create a marker for each destination
+              this.marker = new google.maps.Marker
+              ({
+                  position: {lat: destination.latitude, lng: destination.longitude},
+                  name: destination.name,
+                  address: destination.address,
+                  website: destination.website,
+                  id: destination.id,
+                  animation: google.maps.Animation.DROP
+              });
 
-              requestTimeout = setTimeout(function()
+              var currentMarker = this.marker;
+
+              // Create an onclick event to open an infoWindow at each marker.
+              google.maps.event.addListener(currentMarker, 'click', function()
               {
-                  alert("Unable to retrieve brewery description for brewery with ID " + currentMarker.id);
-              }, 10000);
+                  search = "/breweries?";
+                  terms = "ids=" +  currentMarker.id;
+                  fullUrl = breweryDbUrl + search + terms + breweryDbKey;
 
-              breweryRequest = new XMLHttpRequest();
+                  console.log("URL: " + fullUrl);
 
-              // 3rd param 'true' makes it async
-              breweryRequest.open("GET", fullUrl, true);
-
-              breweryRequest.addEventListener('load', function()
-              {
-                  var response = JSON.parse(breweryRequest.responseText);
-                  console.log(response);
-                  if (response.data.length > 0)
+                  requestTimeout = setTimeout(function()
                   {
-                      console.log(response.data[0].name);
-                      description = response.data[0].description + " " + apiAttribution;
+                      alert("Unable to retrieve brewery description for brewery with ID " + currentMarker.id);
+                  }, 10000);
 
-                      if (self.infoWindow.marker != this)
+                  apiRequest = new XMLHttpRequest();
+
+                  // 3rd param 'true' makes it async
+                  apiRequest.open("GET", fullUrl, true);
+
+                  apiRequest.addEventListener('load', function()
+                  {
+                      var response = JSON.parse(apiRequest .responseText);
+
+                      if (response.data.length > 0)
                       {
-                          self.infoWindow.marker = this;
-                          self.infoWindow.setContent
-                            ('<p>' + currentMarker.name + '</p>' +
-                             '<p>' + currentMarker.address + '</p>' +
-                             '<p>' + currentMarker.website + '</p>' +
-                             '<p>' + description + '</p>');
-                          self.infoWindow.setPosition(currentMarker.position);
-                          self.infoWindow.open(self.map);
-                          // Make sure the marker property is cleared if the infoWindow is closed.
-                          self.infoWindow.addListener('closeclick', function()
+                          console.log(response.data[0].name);
+                          description = response.data[0].description;
+
+                          if (!description || description == "undefined")
                           {
-                              self.infoWindow.marker = null;
-                          });
+                              description = "No description found on ";
+                          }
+
+                          if (self.infoWindow.marker != this)
+                          {
+                              self.infoWindow.marker = this;
+                              self.infoWindow.setContent
+                                ('<p class="infoWindow">' + currentMarker.name + '</p>' +
+                                 '<p class="infoWindow">' + currentMarker.address + '</p>' +
+                                 '<p class="infoWindow">' + currentMarker.website + '</p>' +
+                                 '<p class="infoWindow">' + description + " " + apiAttribution + '</p>');
+                              self.infoWindow.setPosition(currentMarker.position);
+                              self.infoWindow.open(self.map);
+                              // Make sure the marker property is cleared if the infoWindow is closed.
+                              self.infoWindow.addListener('closeclick', function()
+                              {
+                                  self.infoWindow.marker = null;
+                              });
+                          }
+
+                          clearTimeout(requestTimeout);
+                       }
+                      else
+                      {
+                          description = "Brewery with ID " + currentMarker.id + " not found";
                       }
+                   });
 
-                      clearTimeout(requestTimeout);
-                   }
-                  else
-                  {
-                      description = "Brewery with ID " + currentMarker.id + " not found";
-                  }
-               });
+                   apiRequest.send();
+              });
 
-               breweryRequest.send();
+              // show marker
+              this.marker.setMap(self.map);
+              this.marker.setVisible(true);
+
+              // Add the marker to the destination
+              destination.marker = this.marker;
+
+              // add the marker to the observable array
+              self.markers.push(this.marker);
           });
 
-          // show marker
-          this.marker.setMap(self.map);
-
-          // Add the marker to the location
-          location.marker = this.marker;
-
-          // add the marker to the observable array
-          self.markers.push(this.marker);
-      });
+          self.map.setZoom(12);
+          centerMap(self.map, selectedCity());
+      };
 
       // This is the search value
       self.filter = ko.observable('');
 
-      // filter the items using the filter text
-      self.filteredMarkers = ko.computed(function()
+      /**
+        filter the items using the filter text
+      */
+      self.filterMarkers = function()
       {
           var filter = self.filter().toLowerCase();
+
           if (!filter)
           {
               // make all markers visible when filter is cleared
@@ -182,9 +241,13 @@ function initMap()
                   return displayMarker;
               });
           }
-      }, self).extend({notify: 'always'});
+      };
 
-      // Activate marker when location selected from list
+      self.filteredMarkers = ko.computed(self.filterMarkers);
+
+      /**
+       Activate marker when destination selected from list
+      */
       self.activateMarker = function(marker)
       {
           marker.setAnimation(google.maps.Animation.BOUNCE);
@@ -202,7 +265,9 @@ function initMap()
           marker.name = name;
       };
 
-      // determine if passed 'string' contains the passed value
+      /**
+        determine if passed 'string' contains the passed value
+      */
       this.stringContains = function(string, contains)
       {
           string = string || "";
