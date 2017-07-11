@@ -12,18 +12,23 @@
   </head>
   <body>
   	<div id="map"></div>
-     <div id="listDiv">
-      <p>Search: <input data-bind="value: filter, valueUpdate: 'keyup'" /></p>
+    <div id="listDiv">
+      <p>
+      <h4>View Breweries in <select id="selectedCity" data-bind="options: cities" onchange="getBreweries()"></select><h4>
+      <p><button id="seeBreweries" style="display:none" data-bind="click: loadBreweries">See Breweries</button>
+     <h4>Search: <input data-bind="value: filter, valueUpdate: 'keyup'" /></h4>
       <ul id="listView" data-bind="foreach: filteredMarkers">
         <li>
           <a href="#" id="listItem">
-            <p data-bind="text: name, click: $parent.activateMarker"></p>
+            <p id="filter" data-bind="text: name, click: $parent.activateMarker"></p>
           </a>
         </li>
       </ul>
     </div>
 
     <script src="js/knockout-3.4.0.js"></script>
+
+    <script src="js/breweryDb.js"></script>
 
     <script src="js/neighborhood.js"></script>
 
