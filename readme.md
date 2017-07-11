@@ -53,5 +53,6 @@ You can also run it locally by downloading the repository to a folder on your co
     * Filtered markers (all markers before a filter is entered) were not being displayed after I made the above change.  I solved that problem with this link: https://stackoverflow.com/questions/13836351/knockout-js-manually-trigger-computed.  The filtered marker list is now built with a knockout computed function (self.filteredMarkers = ko.computed(self.filterMarkers)).
     * The map is centered on the selected city.
 
-
-    http://en.marnoto.com/2014/09/5-formas-de-personalizar-infowindow.html
+- Iteration 8:
+    Mobile device enhancements:
+    * Adjusted numbers of destinations displayed and map zoom level based on screen size (https://stackoverflow.com/questions/31511001/is-there-a-javascript-equivalent-to-using-media-query)
