@@ -24,7 +24,7 @@ var Brewery = function(response)
     http://api.brewerydb.com/v2/locations?locality=Minneapolis&key=0d1c7bd898b81732618aa3295f808828, http://jfuerst92.github.io/How-To-Guide/requests.html, http://api.brewerydb.com/v2/breweries?ids=rdrfPw&key=0d1c7bd898b81732618aa3295f808828)
 */
 
-this.getBreweries = function()
+var getBreweries = function()
 {
     destinations = [];
 
