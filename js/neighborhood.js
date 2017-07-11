@@ -1,5 +1,3 @@
-var maxDestinations = 12;
-
 var destinations = [];
 
 var defaultMapCenter = "United States";
@@ -33,6 +31,38 @@ var cityList = [' ',
                 'Toronto',
                 'Washington DC'
                ];
+
+var maxDestinationList = [5, 8, 12];
+var mapZoomList = [10, 11, 12];
+
+/**
+  Return the screen size level:
+    0 for small
+    1 for medium
+    2 for large
+
+  The level is used to access values in the above arrays
+*/
+var screenSizeLevel = function()
+{
+    var mq = window.matchMedia('(min-width: 1000px)');
+    if (mq.matches)
+    {
+        return 2;
+    }
+    else
+    {
+        mq = window.matchMedia('(min-width: 650px)');
+        if (mq.matches)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
 
 /**
   Return the city selected by the user
@@ -202,7 +232,7 @@ function initMap()
               self.markers.push(this.marker);
           });
 
-          self.map.setZoom(12);
+          self.map.setZoom(mapZoomList[screenSizeLevel()]);
           centerMap(self.map, selectedCity());
       };
 

@@ -28,6 +28,8 @@ var getBreweries = function()
 {
     destinations = [];
 
+    maxDestinations = maxDestinationList[screenSizeLevel()];
+
     // clear destinations and return if no city was selected
     if (selectedCity() == null)
     {
