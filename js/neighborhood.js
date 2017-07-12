@@ -1,37 +1,54 @@
+/**
+  These variables are used to communicate with the Weather Underground API
+*/
+var wundergroundUrl = "http://api.wunderground.com/api/";
+var wundergroundKey = "3f71928e9073dc9f/";
+var search;
+var terms;
+var fullUrl;
+var requestTimeout;
+var apiAttribution = "(Source: www.wunderground.com)";
+/** */
+
 var destinations = [];
+
+var getDestinations;
 
 var defaultMapCenter = "United States";
 
 var cityList = [' ',
-                'Atlanta',
-                'Baltimore',
-                'Boston',
-                'Chicago',
-                'Cincinnati',
-                'Cleveland',
-                'Dallas',
-                'Denver',
-                'Detroit',
-                'Houston',
-                'Kansas City',
-                'Los Angeles',
-                'Miami',
-                'Milwaukee',
-                'Minneapolis',
-                'New York',
-                'Oakland',
-                'Philadelphia',
-                'Phoenix',
-                'Pittsburgh',
-                'Saint Louis',
-                'San Diego',
-                'San Francisco',
-                'Seattle',
-                'Tampa',
-                'Toronto',
-                'Washington DC'
+                'Atlanta, GA',
+                'Baltimore, MD',
+                'Boston, MA',
+                'Chicago, IL',
+                'Cincinnati, OH',
+                'Cleveland, OH',
+                'Dallas, TX',
+                'Denver, CO',
+                'Detroit, MI',
+                'Houston, TX',
+                'Kansas City, MO',
+                'Los Angeles, CA',
+                'Miami, FL',
+                'Milwaukee, WI',
+                'Minneapolis, MN',
+                'New York, NY',
+                'Oakland, CA',
+                'Philadelphia, PA',
+                'Phoenix, AZ',
+                'Pittsburgh, PA',
+                'Saint Louis, MO',
+                'San Diego, CA',
+                'San Francisco, CA',
+                'Seattle, WA',
+                'Tampa, FL',
+                'Washington, DC'
                ];
 
+/**
+  maxDestination defines the number of destinations to display for different screen sizes
+  mapZoom defines the map zoom factor for different screen sizes
+*/
 var maxDestinationList = [5, 8, 12];
 var mapZoomList = [10, 11, 12];
 
@@ -67,17 +84,43 @@ var screenSizeLevel = function()
 /**
   Return the city selected by the user
 */
-var selectedCity = function()
-{
-    var city = document.getElementById("selectedCity").value;
 
-    // clear destinations and return if no city was selected
-    if (city === null || city.trim().length == 0)
+var geoLocation = [{city: null, state: null}];
+
+var getSelectedCity = function()
+{
+    var cityInput = document.getElementById("selectedCity").value;
+
+    // return if no city was selected
+    if (cityInput === null || cityInput.trim().length == 0)
     {
         return null;
     }
 
-    return city;
+    var tokens = cityInput.split(",");
+
+    geoLocation[0].city = tokens[0].trim();
+    var state = "";
+
+    if (cityList.length > 1)
+    {
+        geoLocation[0].state = tokens[1].trim();
+    }
+};
+
+var getCity = function()
+{
+    return geoLocation[0].city;
+};
+
+var getState = function()
+{
+    return geoLocation[0].state;
+};
+
+var citySelected = function()
+{
+    return (getCity() !== null && getState() !== null);
 };
 
 /**
@@ -103,6 +146,37 @@ var centerMap = function(map, mapCenter)
             alert("Could not find location : " + location);
         }
     });
+};
+
+/**
+  determine if passed 'string' contains the passed value
+*/
+var stringContains = function(string, contains)
+{
+    string = string || "";
+    if (contains.length > string.length)
+        return false;
+    return string.includes(contains);
+};
+
+/**
+  make the first character of the passed lower case for better display
+*/
+var cleanupDisplay = function(string)
+{
+    string = string || "";
+    return string.charAt(0).toLowerCase() + string.slice(1);
+};
+
+/**
+    parse an object from the Wunderground API weather station list
+*/
+var WeatherStation = function(response)
+{
+  this.id = response.id;
+  this.name = response.neighborhood + ", " + response.city;
+  this.latitude = response.lat;
+  this.longitude = response.lon;
 };
 
 
@@ -134,9 +208,86 @@ function initMap()
       self.filter = ko.observable('');
 
       /**
-        The following loop through the destination array and adds markers
+        Get a list of weather stations for the city selected by the user
       */
-      this.loadBreweries = function()
+      getDestinations = function()
+      {
+          getSelectedCity();
+
+          destinations = [];
+
+          var weatherStation;
+
+          var maxDestinations = maxDestinationList[screenSizeLevel()];
+          console.log("maxDestinations: " + maxDestinations);
+
+          if (citySelected())
+          {
+              search = "geolookup/";
+              terms = "q/" + getState() + "/" + getCity() + ".json";
+              fullUrl = wundergroundUrl + wundergroundKey + search + terms;
+
+              console.log("URL: " + fullUrl);
+
+              var requestTimeout = setTimeout(function()
+              {
+                 alert("Failed to get Weather Station list within 12 seconds");
+              }, 12000);
+
+             $.ajax
+             ({
+                  url: fullUrl,
+                  success: function(response)
+                  {
+                      this.weatherStations = response.location.nearby_weather_stations.pws.station;
+
+                      // limit number of stations (maxDestinations ) to keep display manageable
+                      for (var i = 0; i < this.weatherStations.length && destinations.length < maxDestinations; i++)
+                      {
+                          // skip stations that have the city name in the station name
+                          if (this.weatherStations[i].neighborhood.indexOf(getCity()) < 0)
+                          {
+                              weatherStation = new WeatherStation(this.weatherStations[i]);
+
+                              // skip stations with duplicate names
+                              var found = false;
+                              for (var j = 0; j < destinations.length; j++)
+                              {
+                                  if (destinations[j].name === weatherStation.name)
+                                  {
+                                      found = true;
+                                  }
+                              }
+
+                              if (!found)
+                              {
+                                  destinations.push(weatherStation);
+                              }
+                          }
+                      }
+
+                      console.log("weather stations: " + destinations.length);
+
+                      /**
+                        clicking this hidden button triggers the display of markers
+                      */
+                      $('#seeMarkers').click();
+
+                      clearTimeout(requestTimeout);
+                  },
+                  error: function(XMLHttpRequest, textStatus, errorThrown)
+                  {
+                      alert("Status: " + textStatus);
+                      alert("Error: " + errorThrown);
+                  }
+              });
+          }
+      };
+
+      /**
+        Loop through the weather stations and add markers
+      */
+      this.loadMarkers = function()
       {
           // clear markers if array was already populated
           while (self.markers().length > 0)
@@ -146,14 +297,12 @@ function initMap()
 
           destinations.forEach(function(destination)
           {
-              console.log("add brewery: " + destination.name);
+              console.log("add marker for: " + destination.name);
               // Create a marker for each destination
               this.marker = new google.maps.Marker
               ({
                   position: {lat: destination.latitude, lng: destination.longitude},
                   name: destination.name,
-                  address: destination.address,
-                  website: destination.website,
                   id: destination.id,
                   animation: google.maps.Animation.DROP
               });
@@ -163,46 +312,36 @@ function initMap()
               // Create an onclick event to open an infoWindow at each marker.
               google.maps.event.addListener(currentMarker, 'click', function()
               {
-                  search = "/breweries?";
-                  terms = "ids=" +  currentMarker.id;
-                  fullUrl = breweryDbUrl + search + terms + breweryDbKey;
+                  search = "conditions/";
+                  terms = "q/pws:" + currentMarker.id + ".json";
+                  fullUrl = wundergroundUrl + wundergroundKey + search + terms;
 
                   console.log("URL: " + fullUrl);
 
-                  requestTimeout = setTimeout(function()
+                  var requestTimeout = setTimeout(function()
                   {
-                      alert("Unable to retrieve brewery description for brewery with ID " + currentMarker.id);
-                  }, 10000);
+                     alert("Failed to get Weather Station conditions within 8 seconds");
+                  }, 8000);
 
-                  apiRequest = new XMLHttpRequest();
-
-                  // 3rd param 'true' makes it async
-                  apiRequest.open("GET", fullUrl, true);
-
-                  apiRequest.addEventListener('load', function()
-                  {
-                      var response = JSON.parse(apiRequest .responseText);
-
-                      if (response.data.length > 0)
+                  $.ajax
+                  ({
+                      url: fullUrl,
+                      success: function(response)
                       {
-                          console.log(response.data[0].name);
-                          description = response.data[0].description;
-
-                          if (!description || description == "undefined")
-                          {
-                              description = "No description found on ";
-                          }
+                          this.observation = response.current_observation;
 
                           if (self.infoWindow.marker != this)
                           {
                               self.infoWindow.marker = this;
                               self.infoWindow.setContent
-                                ('<p class="infoWindow">' + currentMarker.name + '</p>' +
-                                 '<p class="infoWindow">' + currentMarker.address + '</p>' +
-                                 '<p class="infoWindow">' + currentMarker.website + '</p>' +
-                                 '<p class="infoWindow">' + description + " " + apiAttribution + '</p>');
+                                ('<p class="infoWindow">Conditions at ' + currentMarker.name + '</p>' +
+                                 '<p class="infoWindow">It\'s ' + cleanupDisplay(this.observation.weather) + ' and ' + this.observation.temperature_string + '</p>' +
+                                 '<p class="infoWindow">The wind is ' + cleanupDisplay(this.observation.wind_string)  + '</p>' +
+                                 '<p class="infoWindow">It feels like ' + this.observation.feelslike_string + '</p>' +
+                                 '<p class="infoWindow">'+ apiAttribution + '</p>');
                               self.infoWindow.setPosition(currentMarker.position);
                               self.infoWindow.open(self.map);
+
                               // Make sure the marker property is cleared if the infoWindow is closed.
                               self.infoWindow.addListener('closeclick', function()
                               {
@@ -211,14 +350,13 @@ function initMap()
                           }
 
                           clearTimeout(requestTimeout);
-                       }
-                      else
+                      },
+                      error: function(XMLHttpRequest, textStatus, errorThrown)
                       {
-                          description = "Brewery with ID " + currentMarker.id + " not found";
+                          alert("Status: " + textStatus);
+                          alert("Error: " + errorThrown);
                       }
-                   });
-
-                   apiRequest.send();
+                  });
               });
 
               // show marker
@@ -233,7 +371,7 @@ function initMap()
           });
 
           self.map.setZoom(mapZoomList[screenSizeLevel()]);
-          centerMap(self.map, selectedCity());
+          centerMap(self.map, getCity());
       };
 
       // This is the search value
@@ -261,7 +399,7 @@ function initMap()
               return ko.utils.arrayFilter(self.markers(), function(marker)
               {
                   marker.setVisible(false);
-                  displayMarker = self.stringContains(marker.name.toLowerCase(), filter);
+                  displayMarker = stringContains(marker.name.toLowerCase(), filter);
 
                   if (displayMarker)
                   {
@@ -293,17 +431,6 @@ function initMap()
       self.updateMarker = function(marker, name)
       {
           marker.name = name;
-      };
-
-      /**
-        determine if passed 'string' contains the passed value
-      */
-      this.stringContains = function(string, contains)
-      {
-          string = string || "";
-          if (contains.length > string.length)
-              return false;
-          return string.includes(contains);
       };
   };
 
