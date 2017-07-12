@@ -1,7 +1,7 @@
 /**
   These variables are used to communicate with the Weather Underground API
 */
-var wundergroundUrl = "http://api.wunderground.com/api/";
+var wundergroundUrl = "https://api.wunderground.com/api/";
 var wundergroundKey = "3f71928e9073dc9f/";
 var search;
 var terms;
@@ -92,7 +92,7 @@ var getSelectedCity = function()
     var cityInput = document.getElementById("selectedCity").value;
 
     // return if no city was selected
-    if (cityInput === null || cityInput.trim().length == 0)
+    if (cityInput === null || cityInput.trim().length === 0)
     {
         return null;
     }
@@ -334,7 +334,7 @@ function initMap()
                           {
                               self.infoWindow.marker = this;
                               self.infoWindow.setContent
-                                ('<p class="infoWindow">Conditions at ' + currentMarker.name + '</p>' +
+                                ('<h5 class="infoWindow">Conditions at ' + currentMarker.name + '</h5>' +
                                  '<p class="infoWindow">It\'s ' + cleanupDisplay(this.observation.weather) + ' and ' + this.observation.temperature_string + '</p>' +
                                  '<p class="infoWindow">The wind is ' + cleanupDisplay(this.observation.wind_string)  + '</p>' +
                                  '<p class="infoWindow">It feels like ' + this.observation.feelslike_string + '</p>' +
