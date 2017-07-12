@@ -4,13 +4,13 @@ The requirements for this project are to develop a single page application featu
 - map markers to identify popular destinations or places I’d like to visit
 - a search function to easily discover these destinations
 - a listview to support simple browsing of all destinations
-- a third-party API that provide additional information about each of these destinations (I used http://www.brewerydb.com/developers, API Key 0d1c7bd898b81732618aa3295f808828)
+- a third-party API that provide additional information about each of these destinations.  I used the Weather Underground API (https://www.wunderground.com/weather/api/d/docs, API Key 3f71928e9073dc9f).
 
 
-##Usage Instructions
+## Usage Instructions
 ====================
 
-The application shows a Google Map of the University of Minnesota area, with several breweries designated with markers on the map. A search box can be used to filter the list of breweries.
+The application allows the user to select a city from a list, then shows a Google Map of the selected city with weather stations designated by markers on the map. A search box can be used to filter the list of weather stations.  Clicking one of the markers or a name from the list opens an InfoWindow with current weather conditions for that station.
 
 The application can be run directly from the [GitHub Repository](https://rawgit.com/howardjmn/NeighborhoodMap/master/index.html)
 
@@ -23,7 +23,7 @@ You can also run it locally by downloading the repository to a folder on your co
 - Google Maps API
 -- This implementation is based on the examples provided in the "Understanding API services" module in this course.
 
-##Update History
+## Update History
 ================
  - Iteration 1: Just displays a map and list of destinations
 
@@ -56,3 +56,6 @@ You can also run it locally by downloading the repository to a folder on your co
 - Iteration 8:
     Mobile device enhancements:
     * Adjusted numbers of destinations displayed and map zoom level based on screen size (https://stackoverflow.com/questions/31511001/is-there-a-javascript-equivalent-to-using-media-query)
+
+- Iteration 9:
+    The BreweryDB API does not support JSONP so I wasn't able to get around the Cross-Origin XMLHttpRequest problem (see Iteration 5).  I changed the application to use the Weather Underground API and it now displays weather stations and weather conditions instead of breweries.
