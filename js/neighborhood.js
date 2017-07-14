@@ -223,10 +223,10 @@ var ViewModel = function()
     {
         search = "geolookup/";
         terms = "q/" + getState() + "/" + getCity() + ".json";
-        self.callApi(search, terms, self.parseWeatherStations);
+        self.callApi(search, terms, self.parseWeatherStations, []);
     };
 
-    self.parseWeatherStations = function(response)
+    self.parseWeatherStations = function(response, params)
     {
         destinations = [];
 
@@ -305,15 +305,21 @@ var ViewModel = function()
 
                 search = "conditions/";
                 terms = "q/pws:" + currentMarker.id + ".json";
+                /**
                 fullUrl = wundergroundUrl + wundergroundKey + search + terms;
                 console.log("URL: " + fullUrl);
                 console.log("name " + currentMarker.name);
+                */
 
+                self.callApi(search, terms, self.buildInfoWindow, new Array(this, currentMarker));
+                /**
                 $.ajax
                 ({
                     url: fullUrl,
                     success: function(response)
                     {
+                        self.buildInfoWindow(response, new Array(this, currentMarker));
+
                         this.observation = response.current_observation;
 
                         if (self.infoWindow.marker != this)
@@ -343,6 +349,7 @@ var ViewModel = function()
                         alert("Error: " + errorThrown);
                     }
                 });
+                */
             });
 
             // show marker
@@ -358,6 +365,35 @@ var ViewModel = function()
 
         self.map.setZoom(mapZoomList[screenSizeLevel()]);
         centerMap(self.map, getCity());
+    };
+
+    self.buildInfoWindow = function(response, params)
+    {
+        object = params[0];
+        currentMarker = params[1];
+
+        this.observation = response.current_observation;
+
+        if (self.infoWindow.marker != object)
+        {
+            self.infoWindow.marker = object;
+
+            self.infoWindow.setContent
+              ('<h5 class="infoWindow">Conditions at ' + currentMarker.name + '</h5>' +
+               '<p class="infoWindow">It\'s ' + this.observation.weather.toLowerCase() + ' and ' + this.observation.temperature_string + '</p>' +
+               '<p class="infoWindow">The wind is ' + this.observation.wind_string + '</p>' +
+               '<p class="infoWindow">It feels like ' + this.observation.feelslike_string + '</p>' +
+               '<p class="infoWindow">'+ apiAttribution + '</p>');
+
+            self.infoWindow.setPosition(currentMarker.position);
+            self.infoWindow.open(self.map);
+
+            // Make sure the marker property is cleared if the infoWindow is closed.
+            self.infoWindow.addListener('closeclick', function()
+            {
+                self.infoWindow.marker = null;
+            });
+        }
     };
 
     // This is the search value
@@ -429,8 +465,15 @@ var ViewModel = function()
         marker.name = name;
     };
 
+    /**
+      Call the Weather Underground API
+      - 'search' and 'terms' are used to build the query
+      - 'successFunction' is the function that is called if the ajax request succeeds
+      - 'params' is an array of objects that is passed to the success function.  It could be an empty array.
 
-    self.callApi = function(search, terms, successFunction)
+      the ajax request response and 'params' are passed to the success function
+    */
+    self.callApi = function(search, terms, successFunction, params)
     {
         fullUrl = wundergroundUrl + wundergroundKey + search + terms;
         console.log("URL: " + fullUrl);
@@ -440,7 +483,7 @@ var ViewModel = function()
             url: fullUrl,
             success: function(response)
             {
-                successFunction(response);
+                successFunction(response, params);
             },
             error: function(XMLHttpRequest, textStatus, errorThrown)
             {
