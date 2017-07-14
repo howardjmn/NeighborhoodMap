@@ -440,7 +440,7 @@ var ViewModel = function()
             url: fullUrl,
             success: function(response)
             {
-                successFunction(response)
+                successFunction(response);
             },
             error: function(XMLHttpRequest, textStatus, errorThrown)
             {
@@ -449,7 +449,7 @@ var ViewModel = function()
             }
         });
     };
-}
+};
 
 /**
   Instantiate the ViewModel
