@@ -7,16 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/bootstrap.css">
-    <script src="js/jquery.js"></script>
-    <script src="js/bootstrap.min.js"></script>
   </head>
   <body>
   	<div id="map"></div>
     <div id="listDiv">
       <p>
-      <h4>View Weather Stations in <select id="selectedCity" data-bind="options: cities" onchange="getDestinations()"></select></h4>
-      <!-- This hidden button is clicked after the list of weather stations has been retrieved by the API.  It calls the function that add markers to the map. -->
-      <p><button id="seeMarkers" style="display:none" data-bind="click: loadMarkers">Show Markers</button>
+      <h4>View Weather Stations in <select data-bind="options: cities, event:{change: getDestinations}, value: selectedCity"></select></h4>
      <h4>Search: <input data-bind="value: filter, valueUpdate: 'keyup'" /></h4>
       <ul id="listView" data-bind="foreach: filteredMarkers">
         <li>
@@ -27,19 +23,12 @@
       </ul>
     </div>
 
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="js/knockout-3.4.0.js"></script>
-
     <script src="js/neighborhood.js"></script>
 
-    <!--Load Google map, call error handling if problem-->
+    <!--Load Google map, call error handling if problem -->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5OAqmH9eC2BAIJ02cRTLkODaW0gbEgFc&callback=initMap" onerror="mapApiError()"></script>
-
-    <!--Google map error handler-->
-    <script>
-      function mapApiError()
-      {
-        alert("Sorry, Google map failed to load.  Error detail can be found in Javascript console.");
-      }
-    </script>
   </body>
 </html>
